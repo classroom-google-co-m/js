@@ -1,29 +1,59 @@
-(() => {
+(() => { // hi
   "use strict";
 
   /*
    * LIBRARY LAUNCHER
-   * Easy edits live in CONFIG below.
-   * The editor password is fetched from PASS_URL and compared as plain text.
-   *
-   * Important: a password checked in browser JavaScript is not secure access
-   * control. Anyone who can load this script can inspect or bypass the check.
+   * Configure the entire Library from the CONFIG object near the top.
+   * There is no on-page editor. Edit this source file and reload it.
    */
 
-  const PASS_URL = "https://cdn.jsdelivr.net/gh/classroom-google-co-m/js@main/password.txt";
-  const SCRIPT_URL = document.currentScript && document.currentScript.src ? document.currentScript.src : "";
-
-  // ======================== EASY UI EDITOR ========================
-  // Edit the title, opening menu, games, and background here.
+  // ======================== LIBRARY CONFIGURATION ========================
+  // All routine customization lives here: content, appearance, background,
+  // button labels, layout, launch behavior, and optional CSS overrides.
   const CONFIG = {
     title: "Library",
     subtitle: "Your games, all in one place.",
     openingMenu: {
+      eyebrow: "YOUR PERSONAL GAME LIBRARY",
       heading: "Welcome to your library",
-      text: "Choose a game below. Use the editor to customize this library.",
-      buttonText: "Browse library"
+      text: "Choose a game below to get started.",
+      buttonText: "Browse games"
+    },
+    labels: {
+      brand: "LIBRARY / LAUNCHER",
+      gamesHeading: "Games",
+      launchButton: "Launch game",
+      homeButton: "Home",
+      closeButton: "Close",
+      emptyMessage: "No games have been added yet.",
+      countSingular: "game",
+      countPlural: "games",
+      redirectLoading: "Loading game HTML...",
+      redirectError: "Could not load this game's HTML. The host may block cross-origin requests."
+    },
+    layout: {
+      maxWidth: "1100px",
+      pagePadding: "30px 0 56px",
+      cardMinWidth: "235px",
+      cardGap: "14px",
+      cardRadius: "19px",
+      heroRadius: "26px",
+      fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+      showHomeButton: true,
+      showCloseButton: true,
+      showGameCount: true
+    },
+    colors: {
+      background: "#080b16",
+      cardBackground: "#0c1023c9",
+      text: "#f7f7ff",
+      mutedText: "#aeb2c9",
+      accent: "#9c8cff",
+      border: "#ffffff1c",
+      buttonText: "#071019"
     },
     background: {
+      enabled: true,
       color: "#080b16",
       dotColor: "#9c8cff",
       accentColor: "#ff9ffc",
@@ -43,22 +73,47 @@
       sparkle: false,
       speed: 1
     },
+    // Optional CSS appended after the built-in stylesheet. Use it to change
+    // any selector, animation, spacing, typography, borders, and responsive UI.
+    customCSS: "",
     games: [
       {
         title: "Example Game",
         description: "Replace this with your first game.",
-        url: "https://example.com",
-        category: "Arcade"
+        url: "https://example.com/game.html",
+        category: "Arcade",
+        mode: "redirect", // redirect | iframe | raw
+        iframeTitle: "Example Game",
+        iframeAllow: "fullscreen; autoplay; gamepad",
+        iframeSandbox: "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+        openInNewTab: true
       },
       {
         title: "Another Game",
-        description: "Add or edit games in the editor.",
+        description: "This example opens the URL inside an iframe.",
         url: "https://example.org",
-        category: "Featured"
+        category: "Featured",
+        mode: "iframe",
+        iframeTitle: "Another Game",
+        iframeAllow: "fullscreen; autoplay; gamepad",
+        iframeSandbox: "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+        openInNewTab: true
+      },
+      {
+        title: "Raw Example",
+        description: "Opens the page directly in a new tab. This is the least isolated option.",
+        url: "https://example.net",
+        category: "Direct",
+        mode: "raw",
+        openInNewTab: true
       }
     ]
   };
-  // ================================================================
+  // ======================================================================
+
+  const state = CONFIG;
+  let root;
+  let stopBackground;
 
   const log = (...args) => console.log("[Library]", ...args);
   const warn = (...args) => console.warn("[Library]", ...args);
@@ -69,20 +124,6 @@
     return;
   }
   window.__LIBRARY_RUNNING__ = true;
-
-  const clone = value => JSON.parse(JSON.stringify(value));
-  let state = clone(CONFIG);
-  let editorOpen = false;
-
-  async function checkEditorPassword(candidate) {
-    const response = await fetch(PASS_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Password file request failed: HTTP ${response.status}`);
-    // Use the visible contents directly. Trim surrounding whitespace so a
-    // normal trailing newline in password.txt does not affect the comparison.
-    const password = (await response.text()).replace(/^\uFEFF/, "").trim();
-    if (!password) throw new Error("password.txt is empty.");
-    return String(candidate).trim() === password;
-  }
 
   function addStyles() {
     if (document.getElementById("library-style")) return;
@@ -95,22 +136,22 @@
         --gd-dot: ${state.background.dotColor};
         --gd-accent: ${state.background.accentColor};
         position: fixed; inset: 0; z-index: 2147483000; overflow: auto;
-        color: #f7f7ff; font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
-        background: var(--gd-bg); isolation: isolate;
+        color: ${state.colors.text}; font: 15px/1.5 ${state.layout.fontFamily};
+        background: var(--gd-bg); isolation: isolate; color: ${state.colors.text};
       }
       #library-root button, #library-root input, #library-root textarea,
       #library-root select { font: inherit; }
       #gd-bg-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
       .gd-shell { position: relative; z-index: 1; }
-      .gd-shell { width: min(1100px, calc(100% - 36px)); margin: 0 auto; padding: 30px 0 56px; }
+      .gd-shell { width: min(${state.layout.maxWidth}, calc(100% - 36px)); margin: 0 auto; padding: ${state.layout.pagePadding}; }
       .gd-top { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:42px; }
       .gd-brand { font-size:13px; font-weight:800; letter-spacing:.19em; color:var(--gd-accent); }
       .gd-actions { display:flex; flex-wrap:wrap; gap:9px; }
       .gd-btn { border:1px solid #ffffff28; border-radius:12px; padding:10px 15px; color:#fff;
         background:#ffffff0d; cursor:pointer; transition:transform .18s, background .18s, border-color .18s; }
       .gd-btn:hover { transform:translateY(-2px); background:#ffffff18; border-color:#ffffff55; }
-      .gd-btn.primary { background:var(--gd-accent); border-color:transparent; color:#071019; font-weight:800; }
-      .gd-hero { padding:clamp(22px,5vw,54px); border:1px solid #ffffff1c; border-radius:26px;
+      .gd-btn.primary { background:var(--gd-accent); border-color:transparent; color:${state.colors.buttonText}; font-weight:800; }
+      .gd-hero { padding:clamp(22px,5vw,54px); border:1px solid ${state.colors.border}; border-radius:${state.layout.heroRadius};
         background:linear-gradient(135deg,#ffffff12,#ffffff05); box-shadow:0 25px 100px #0003; backdrop-filter:blur(12px); }
       .gd-kicker { color:var(--gd-accent); text-transform:uppercase; font-size:11px; letter-spacing:.2em; font-weight:800; }
       .gd-hero h1 { font-size:clamp(38px,8vw,76px); line-height:1.02; letter-spacing:-.055em; margin:12px 0; overflow-wrap:anywhere; }
@@ -118,33 +159,17 @@
       .gd-section-head { display:flex; align-items:end; justify-content:space-between; gap:14px; margin:34px 0 15px; }
       .gd-section-head h2 { margin:0; font-size:22px; letter-spacing:-.03em; }
       .gd-section-head span { color:#a7abc3; font-size:12px; }
-      .gd-games { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr)); gap:14px; }
-      .gd-game { border:1px solid #ffffff1c; border-radius:19px; padding:19px; min-height:190px;
-        background:#0c1023c9; box-shadow:0 12px 35px #0002; backdrop-filter:blur(12px);
+      .gd-games { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,${state.layout.cardMinWidth}),1fr)); gap:${state.layout.cardGap}; }
+      .gd-game { border:1px solid ${state.colors.border}; border-radius:${state.layout.cardRadius}; padding:19px; min-height:190px;
+        background:${state.colors.cardBackground}; box-shadow:0 12px 35px #0002; backdrop-filter:blur(12px);
         display:flex; flex-direction:column; align-items:flex-start; }
       .gd-game h3 { margin:0 0 5px; font-size:18px; }
       .gd-game p { margin:0 0 16px; color:#aeb2c9; font-size:13px; flex:1; }
       .gd-tag { color:var(--gd-accent); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; margin-bottom:7px; }
       .gd-empty { color:#b9bdd2; padding:24px; border:1px dashed #ffffff35; border-radius:16px; }
-      .gd-modal-backdrop { position:fixed; inset:0; z-index:5; display:grid; place-items:center; padding:18px; background:#03040bd9; backdrop-filter:blur(10px); }
-      .gd-modal { width:min(760px,100%); max-height:90vh; overflow:auto; padding:23px; border:1px solid #ffffff26;
-        border-radius:20px; background:#111529; box-shadow:0 24px 100px #0009; }
-      .gd-modal h2 { margin:0 0 5px; font-size:23px; }
-      .gd-muted { color:#aeb3ca; font-size:13px; margin:0 0 18px; }
-      .gd-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-      .gd-field { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
-      .gd-field.full { grid-column:1/-1; }
-      .gd-field label { font-size:12px; color:#c6c9dc; font-weight:700; }
-      .gd-field input, .gd-field textarea, .gd-field select { width:100%; border:1px solid #ffffff25; border-radius:10px;
-        background:#080b18; color:#fff; padding:10px 11px; outline:none; }
-      .gd-field textarea { min-height:70px; resize:vertical; }
-      .gd-field input:focus, .gd-field textarea:focus { border-color:var(--gd-accent); }
-      .gd-game-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; border:1px solid #ffffff18; padding:10px; border-radius:12px; margin:8px 0; }
-      .gd-game-row small { display:block; color:#9da3bd; overflow-wrap:anywhere; }
-      .gd-modal-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-top:17px; }
-      .gd-status { min-height:20px; color:var(--gd-accent); font-size:12px; margin-top:8px; }
       @media(max-width:560px) { .gd-top { align-items:flex-start; flex-direction:column; margin-bottom:25px; } .gd-form-grid { grid-template-columns:1fr; } .gd-field.full { grid-column:auto; } }
     `;
+    style.textContent += "\n" + (state.customCSS || "");
     document.head.appendChild(style);
   }
 
@@ -534,258 +559,157 @@ const link = gl => {
     const root = document.createElement("div");
     root.id = "library-root";
     root.innerHTML = `<canvas id="gd-bg-canvas" aria-hidden="true"></canvas><div class="gd-shell">
-      <header class="gd-top"><div class="gd-brand">LIBRARY / LAUNCHER</div><div class="gd-actions">
-        <button class="gd-btn" data-action="home">Home</button>
-        <button class="gd-btn" data-action="editor">Edit UI</button>
-        <button class="gd-btn" data-action="close">Close</button>
-      </div></header>
-      <section class="gd-hero"><div class="gd-kicker">Your personal game library</div><h1 id="gd-title"></h1>
+      <header class="gd-top"><div class="gd-brand"></div><div class="gd-actions" id="gd-header-actions"></div></header>
+      <section class="gd-hero"><div class="gd-kicker"></div><h1 id="gd-title"></h1>
         <p id="gd-subtitle"></p><div class="gd-actions"><button class="gd-btn primary" data-action="browse"></button></div>
       </section>
-      <div class="gd-section-head"><h2>Games</h2><span id="gd-count"></span></div>
+      <div class="gd-section-head"><h2 id="gd-games-heading"></h2><span id="gd-count"></span></div>
       <section id="gd-games" class="gd-games"></section>
     </div>`;
     document.body.appendChild(root);
     return root;
   }
 
-  let root, stopBackground;
   function render() {
     if (!root || !root.isConnected) return;
-    root.style.setProperty("--gd-bg", state.background.color);
+    root.style.setProperty("--gd-bg", state.colors.background || state.background.color);
     root.style.setProperty("--gd-dot", state.background.dotColor);
-    root.style.setProperty("--gd-accent", state.background.accentColor);
-    root.querySelector("#gd-title").textContent = state.title;
-    root.querySelector(".gd-kicker").textContent = state.openingMenu.heading || "Your personal game library";
+    root.style.setProperty("--gd-accent", state.colors.accent || state.background.accentColor);
+    root.querySelector(".gd-brand").textContent = state.labels.brand;
+    document.title = state.title;
+    root.querySelector("#gd-title").textContent = state.openingMenu.heading || state.title;
+    root.querySelector(".gd-kicker").textContent = state.openingMenu.eyebrow || "Your personal game library";
     root.querySelector("#gd-subtitle").textContent = [state.subtitle, state.openingMenu.text].filter(Boolean).join(" ");
-    root.querySelector('[data-action="browse"]').textContent = state.openingMenu.buttonText || "Browse library";
-    root.querySelector("#gd-count").textContent = `${state.games.length} game${state.games.length === 1 ? "" : "s"}`;
+    root.querySelector('[data-action="browse"]').textContent = state.openingMenu.buttonText || "Browse games";
+    root.querySelector("#gd-games-heading").textContent = state.labels.gamesHeading;
+    const count = root.querySelector("#gd-count");
+    count.textContent = `${state.games.length} ${state.games.length === 1 ? state.labels.countSingular : state.labels.countPlural}`;
+    count.hidden = !state.layout.showGameCount;
+    const actions = root.querySelector("#gd-header-actions");
+    actions.innerHTML = `${state.layout.showHomeButton ? `<button class="gd-btn" data-action="home">${esc(state.labels.homeButton)}</button>` : ""}${state.layout.showCloseButton ? `<button class="gd-btn" data-action="close">${esc(state.labels.closeButton)}</button>` : ""}`;
     const games = root.querySelector("#gd-games");
     if (!state.games.length) {
-      games.innerHTML = `<div class="gd-empty">No games yet. Open Edit UI to add your first game.</div>`;
+      games.innerHTML = `<div class="gd-empty">${esc(state.labels.emptyMessage)}</div>`;
     } else {
       games.innerHTML = state.games.map((game, i) => `
         <article class="gd-game">
           <div class="gd-tag">${esc(game.category || "Game")}</div>
           <h3>${esc(game.title || "Untitled game")}</h3>
           <p>${esc(game.description || "")}</p>
-          <button class="gd-btn primary" data-launch="${i}">Launch game ↗</button>
+          <button class="gd-btn primary" data-launch="${i}">${esc(game.buttonText || state.labels.launchButton)}</button>
         </article>`).join("");
     }
     if (stopBackground) stopBackground();
-    stopBackground = createBackground(root.querySelector("#gd-bg-canvas"));
+    const canvas = root.querySelector("#gd-bg-canvas");
+    canvas.hidden = !state.background.enabled;
+    stopBackground = state.background.enabled ? createBackground(canvas) : null;
   }
 
-  function closeModal() { root?.querySelector(".gd-modal-backdrop")?.remove(); editorOpen = false; }
-
-  function showPasswordDialog() {
-    if (editorOpen) return;
-    editorOpen = true;
-    const backdrop = document.createElement("div");
-    backdrop.className = "gd-modal-backdrop";
-    backdrop.innerHTML = `<section class="gd-modal" role="dialog" aria-modal="true" aria-labelledby="gd-password-heading">
-      <h2 id="gd-password-heading">Editor access</h2>
-      <p class="gd-muted">Enter the editor password to change games, text, and background settings. The password is checked against the Base32-decoded value from the configured password file.</p>
-      <form id="gd-password-form"><div class="gd-field"><label for="gd-password">Password</label><input id="gd-password" type="password" autocomplete="current-password" required></div>
-      <div class="gd-status" id="gd-password-status" role="status"></div>
-      <div class="gd-modal-actions"><button type="button" class="gd-btn" data-modal-close>Cancel</button><button class="gd-btn primary" type="submit">Unlock editor</button></div></form>
-    </section>`;
-    root.appendChild(backdrop);
-    backdrop.querySelector("#gd-password").focus();
-    backdrop.querySelector("[data-modal-close]").onclick = closeModal;
-    backdrop.addEventListener("click", e => { if (e.target === backdrop) closeModal(); });
-    backdrop.querySelector("form").onsubmit = async e => {
-      e.preventDefault();
-      const input = backdrop.querySelector("#gd-password");
-      const status = backdrop.querySelector("#gd-password-status");
-      const submit = backdrop.querySelector('button[type="submit"]');
-      submit.disabled = true; status.textContent = "Checking password file…";
-      try {
-        const ok = await checkEditorPassword(input.value);
-        if (!ok) { input.value = ""; status.textContent = "Incorrect password."; input.focus(); return; }
-        log("Editor password file loaded and Base32-decoded successfully.");
-        closeModal();
-        showEditor();
-      } catch (err) {
-        error("Could not load or decode editor password:", err);
-        status.textContent = "Could not load the password file. Check the console and try again.";
-      } finally { submit.disabled = false; }
-    };
-  }
-
-  function showEditor() {
-    editorOpen = true;
-    const backdrop = document.createElement("div");
-    backdrop.className = "gd-modal-backdrop";
-    const gameRows = state.games.map((g, i) => `<div class="gd-game-row"><div><strong>${esc(g.title || "Untitled")}</strong><small>${esc(g.url || "")}</small></div><div class="gd-actions"><button class="gd-btn" data-edit-game="${i}">Edit</button><button class="gd-btn" data-delete-game="${i}">Delete</button></div></div>`).join("");
-    backdrop.innerHTML = `<section class="gd-modal" role="dialog" aria-modal="true" aria-labelledby="gd-editor-heading">
-      <h2 id="gd-editor-heading">UI Editor</h2>
-      <p class="gd-muted">Change the launcher text, colors, background, and game list. Save locally or export a new JavaScript file.</p>
-      <form id="gd-editor-form">
-        <div class="gd-form-grid">
-          <div class="gd-field"><label for="gd-edit-title">Main title</label><input id="gd-edit-title" value="${esc(state.title)}"></div>
-          <div class="gd-field"><label for="gd-edit-subtitle">Subtitle</label><input id="gd-edit-subtitle" value="${esc(state.subtitle)}"></div>
-          <div class="gd-field"><label for="gd-edit-opening-heading">Opening menu heading</label><input id="gd-edit-opening-heading" value="${esc(state.openingMenu.heading || "")}"></div>
-          <div class="gd-field"><label for="gd-edit-opening-text">Opening menu text</label><input id="gd-edit-opening-text" value="${esc(state.openingMenu.text || "")}"></div>
-          <div class="gd-field"><label for="gd-edit-button-text">Main button text</label><input id="gd-edit-button-text" value="${esc(state.openingMenu.buttonText || "")}"></div>
-          <div class="gd-field"><label for="gd-edit-bg">Background color</label><input id="gd-edit-bg" type="color" value="${esc(state.background.color)}"></div>
-          <div class="gd-field"><label for="gd-edit-dot">Dot color</label><input id="gd-edit-dot" type="color" value="${esc(state.background.dotColor)}"></div>
-          <div class="gd-field"><label for="gd-edit-accent">Accent color</label><input id="gd-edit-accent" type="color" value="${esc(state.background.accentColor)}"></div>
-          <div class="gd-field"><label for="gd-edit-gradient-from">Gradient start</label><input id="gd-edit-gradient-from" type="color" value="${esc(state.background.gradientFrom || state.background.dotColor)}"></div>
-          <div class="gd-field"><label for="gd-edit-gradient-to">Gradient end</label><input id="gd-edit-gradient-to" type="color" value="${esc(state.background.gradientTo || state.background.accentColor)}"></div>
-          <div class="gd-field"><label for="gd-edit-spacing">Dot spacing (14 to 80)</label><input id="gd-edit-spacing" type="number" min="14" max="80" value="${esc(state.background.dotSpacing)}"></div>
-          <div class="gd-field"><label for="gd-edit-radius">Dot radius (0.5 to 5)</label><input id="gd-edit-radius" type="number" min="0.5" max="5" step="0.1" value="${esc(state.background.dotRadius)}"></div>
-          <div class="gd-field"><label for="gd-edit-cursor">Cursor effect radius</label><input id="gd-edit-cursor" type="number" min="40" max="500" value="${esc(state.background.cursorRadius)}"></div>
-          <div class="gd-field"><label for="gd-edit-glow">Cursor glow (0 to 1)</label><input id="gd-edit-glow" type="number" min="0" max="1" step="0.05" value="${esc(state.background.glow)}"></div>
-        </div>
-        <div class="gd-section-head"><h2>Games</h2><span>${state.games.length} listed</span></div>
-        <div id="gd-editor-games">${gameRows || '<p class="gd-muted">No games added yet.</p>'}</div>
-        <div class="gd-modal-actions" style="justify-content:flex-start"><button type="button" class="gd-btn" id="gd-add-game">+ Add game</button></div>
-        <div class="gd-status" id="gd-editor-status" role="status"></div>
-        <div class="gd-modal-actions">
-          <button type="button" class="gd-btn" data-modal-close>Cancel</button>
-          <button type="button" class="gd-btn" id="gd-save-local">Save in this browser</button>
-          <button type="button" class="gd-btn primary" id="gd-export">Export updated JS</button>
-          <button type="submit" class="gd-btn primary">Apply changes</button>
-        </div>
-      </form>
-    </section>`;
-    root.appendChild(backdrop);
-    backdrop.querySelector("[data-modal-close]").onclick = closeModal;
-    backdrop.addEventListener("click", e => { if (e.target === backdrop) closeModal(); });
-    const readForm = () => {
-      state.title = backdrop.querySelector("#gd-edit-title").value.trim() || "Library";
-      state.subtitle = backdrop.querySelector("#gd-edit-subtitle").value.trim();
-      state.openingMenu.heading = backdrop.querySelector("#gd-edit-opening-heading").value.trim();
-      state.openingMenu.text = backdrop.querySelector("#gd-edit-opening-text").value.trim();
-      state.openingMenu.buttonText = backdrop.querySelector("#gd-edit-button-text").value.trim() || "Browse library";
-      state.background.color = backdrop.querySelector("#gd-edit-bg").value;
-      state.background.dotColor = backdrop.querySelector("#gd-edit-dot").value;
-      state.background.accentColor = backdrop.querySelector("#gd-edit-accent").value;
-      state.background.gradientFrom = backdrop.querySelector("#gd-edit-gradient-from").value;
-      state.background.gradientTo = backdrop.querySelector("#gd-edit-gradient-to").value;
-      state.background.dotSpacing = Math.max(14, Math.min(80, Number(backdrop.querySelector("#gd-edit-spacing").value) || 26));
-      state.background.dotRadius = Math.max(.5, Math.min(5, Number(backdrop.querySelector("#gd-edit-radius").value) || 1.7));
-      state.background.cursorRadius = Math.max(40, Math.min(500, Number(backdrop.querySelector("#gd-edit-cursor").value) || 150));
-      state.background.glow = Math.max(0, Math.min(1, Number(backdrop.querySelector("#gd-edit-glow").value) || 0));
-    };
-    backdrop.querySelector("#gd-add-game").onclick = () => {
-      readForm();
-      state.games.push({ title: "New game", description: "Describe your game.", url: "https://example.com", category: "New" });
-      closeModal(); render(); showEditor();
-    };
-    backdrop.querySelectorAll("[data-edit-game]").forEach(button => button.onclick = () => {
-      readForm();
-      const i = Number(button.dataset.editGame), game = state.games[i];
-      const editor = document.createElement("div");
-      editor.className = "gd-modal-backdrop";
-      editor.style.zIndex = "6";
-      editor.innerHTML = `<section class="gd-modal"><h2>Edit game</h2><p class="gd-muted">Update this game's card.</p>
-        <form id="gd-one-game">
-          <div class="gd-field"><label>Game title</label><input name="title" required value="${esc(game.title)}"></div>
-          <div class="gd-field"><label>Description</label><textarea name="description">${esc(game.description)}</textarea></div>
-          <div class="gd-form-grid"><div class="gd-field"><label>Game URL</label><input name="url" type="url" required value="${esc(game.url)}"></div>
-          <div class="gd-field full"><label>Category</label><input name="category" value="${esc(game.category)}"></div></div>
-          <div class="gd-modal-actions"><button type="button" class="gd-btn" id="gd-game-cancel">Cancel</button><button class="gd-btn primary">Save game</button></div>
-        </form></section>`;
-      backdrop.appendChild(editor);
-      editor.querySelector("#gd-game-cancel").onclick = () => editor.remove();
-      editor.querySelector("form").onsubmit = ev => {
-        ev.preventDefault(); const fd = new FormData(ev.currentTarget);
-        const url = safeUrl(fd.get("url"));
-        if (!url) { alert("Enter a valid http or https URL."); return; }
-        state.games[i] = { title: fd.get("title").trim(), description: fd.get("description").trim(), url, category: fd.get("category").trim() || "Game" };
-        editor.remove(); closeModal(); render(); showEditor();
-      };
-    });
-    backdrop.querySelectorAll("[data-delete-game]").forEach(button => button.onclick = () => {
-      const i = Number(button.dataset.deleteGame);
-      if (confirm(`Delete "${state.games[i].title}"?`)) {
-        state.games.splice(i, 1); closeModal(); render(); showEditor();
-      }
-    });
-    backdrop.querySelector("#gd-editor-form").onsubmit = e => {
-      e.preventDefault(); readForm(); render(); closeModal(); log("Changes applied.");
-    };
-    backdrop.querySelector("#gd-save-local").onclick = () => {
-      readForm();
-      try { localStorage.setItem("library-config", JSON.stringify(state)); render(); backdrop.querySelector("#gd-editor-status").textContent = "Saved in this browser."; log("Configuration saved in localStorage."); }
-      catch (err) { error("Could not save configuration:", err); backdrop.querySelector("#gd-editor-status").textContent = "Browser storage is unavailable."; }
-    };
-    backdrop.querySelector("#gd-export").onclick = async () => {
-      readForm();
-      const status = backdrop.querySelector("#gd-editor-status");
-      try {
-        const sourceUrl = SCRIPT_URL;
-        if (!sourceUrl) throw new Error("This script was pasted into the console or injected inline, so its full source URL is unknown.");
-        const response = await fetch(sourceUrl, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Could not read original script: HTTP ${response.status}`);
-        let source = await response.text();
-        const configLiteral = "const CONFIG = " + JSON.stringify(state, null, 2) + ";";
-        source = source.replace(/const CONFIG = \{[\s\S]*?\n  \};/, configLiteral);
-        if (source === await response.text()) throw new Error("Could not locate the CONFIG block in the source.");
-        const blob = new Blob([source], { type: "text/javascript;charset=utf-8" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob); link.download = "library-custom.js";
-        link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-        status.textContent = "Exported library-custom.js with your current settings.";
-        log("Updated JavaScript export created.");
-      } catch (err) {
-        error("Full script export failed:", err);
-        const payload = "/* Paste this object over the CONFIG object near the top of the Library script. */\nconst CONFIG = " + JSON.stringify(state, null, 2) + ";\n";
-        try {
-          await navigator.clipboard.writeText(payload);
-          status.textContent = "Could not access the original script URL. Copied your updated CONFIG block instead.";
-        } catch {
-          status.textContent = "Could not access the original script URL. Your updated config is available in the browser console.";
-          log(payload);
-        }
-      }
-    };
-  }
-
-  function restoreSavedConfig() {
+  function openAboutBlank(title) {
+    const tab = window.open("about:blank", "_blank");
+    if (!tab) {
+      alert("The new tab was blocked. Allow pop-ups for this site and try again.");
+      return null;
+    }
     try {
-      const saved = localStorage.getItem("library-config");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed.games) && parsed.background) state = parsed;
-        log("Loaded saved Library settings from this browser.");
+      tab.document.title = title || "Game";
+      tab.document.body.style.margin = "0";
+      tab.document.body.style.background = "#000";
+    } catch (err) { warn("Could not initialize the new tab:", err); }
+    return tab;
+  }
+
+  async function launchGame(game) {
+    const url = safeUrl(game && game.url);
+    if (!url) { warn("This game has an invalid URL:", game && game.url); return; }
+    const mode = ["redirect", "iframe", "raw"].includes(game.mode) ? game.mode : "redirect";
+    log(`Launching ${game.title || "game"} using mode: ${mode}`, url);
+
+    if (mode === "raw") {
+      const tab = window.open(url, game.openInNewTab === false ? "_self" : "_blank");
+      if (!tab) warn("The browser may have blocked the new tab.");
+      return;
+    }
+
+    // Open synchronously from the click handler so popup blockers allow it.
+    const tab = openAboutBlank(game.title || "Game");
+    if (!tab) return;
+
+    if (mode === "iframe") {
+      const iframe = tab.document.createElement("iframe");
+      iframe.title = game.iframeTitle || game.title || "Game";
+      iframe.src = url;
+      iframe.allow = game.iframeAllow || "fullscreen; autoplay; gamepad";
+      iframe.referrerPolicy = game.referrerPolicy || "strict-origin-when-cross-origin";
+      iframe.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;background:#000";
+      if (game.iframeSandbox) iframe.setAttribute("sandbox", game.iframeSandbox);
+      tab.document.body.appendChild(iframe);
+      return;
+    }
+
+    // redirect mode downloads the HTML response and writes it into the blank tab.
+    // The target server must permit fetch via CORS for this to work cross-origin.
+    const status = tab.document.createElement("p");
+    status.textContent = state.labels.redirectLoading;
+    status.style.cssText = "color:#ddd;font:16px system-ui;padding:24px";
+    tab.document.body.appendChild(status);
+    try {
+      const response = await fetch(url, { cache: game.cacheMode || "default", credentials: game.credentials || "omit" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType && !/text\/html|application\/xhtml\+xml/i.test(contentType)) {
+        warn("The redirect target did not advertise an HTML content type:", contentType);
       }
-    } catch (err) { warn("Saved configuration could not be loaded:", err); }
+      let html = await response.text();
+      // Preserve relative script, stylesheet, image, and asset paths after the
+      // response is written into about:blank.
+      const baseTag = `<base href="${esc(url)}">`;
+      if (/<head\b[^>]*>/i.test(html)) {
+        html = html.replace(/<head\b[^>]*>/i, match => `${match}${baseTag}`);
+      } else if (/<html\b[^>]*>/i.test(html)) {
+        html = html.replace(/<html\b[^>]*>/i, match => `${match}<head>${baseTag}</head>`);
+      } else {
+        html = `<!doctype html><html><head>${baseTag}</head><body>${html}</body></html>`;
+      }
+      tab.document.open();
+      tab.document.write(html);
+      tab.document.close();
+    } catch (err) {
+      error("Could not download game HTML for redirect mode:", err);
+      try {
+        tab.document.open();
+        tab.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(game.title || "Game")}</title></head><body style="margin:0;background:#080b16;color:#f7f7ff;font:16px system-ui;padding:24px"><h1>Could not load game HTML</h1><p>${esc(state.labels.redirectError)}</p><p>${esc(String(err && err.message || err))}</p><p>Try iframe mode or raw mode for this URL.</p></body></html>`);
+        tab.document.close();
+      } catch (_) { /* tab may have been closed */ }
+    }
   }
 
   function mount() {
     addStyles();
-    restoreSavedConfig();
     root = ensureRoot();
     render();
     root.addEventListener("click", event => {
       const action = event.target.closest("[data-action]");
       if (action) {
         const name = action.dataset.action;
-        if (name === "editor") showPasswordDialog();
         if (name === "close") {
           if (stopBackground) stopBackground();
-          root.remove(); document.getElementById("library-style")?.remove();
+          root.remove();
+          document.getElementById("library-style")?.remove();
           window.__LIBRARY_RUNNING__ = false;
-          log("Launcher closed.");
+          log("Library closed.");
         }
-        if (name === "home") render();
+        if (name === "home") window.scrollTo({ top: 0, behavior: "smooth" });
         if (name === "browse") root.querySelector("#gd-games")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       const launch = event.target.closest("[data-launch]");
       if (launch) {
         const game = state.games[Number(launch.dataset.launch)];
-        const url = game && safeUrl(game.url);
-        if (!url) { warn("This game has an invalid URL."); return; }
-        log("Launching game:", game.title, url);
-        window.open(url, "_blank", "noopener,noreferrer");
+        if (game) void launchGame(game);
       }
     });
     log("Library loaded successfully.");
-    log("Background initialized. Editor is available through the Edit UI button.");
-    log("To edit the starter content directly, modify CONFIG near the top of this script.");
+    log("No on-page editor is included. Edit CONFIG near the top of this script to customize the entire Library.");
   }
 
   const libraryAddon = {
