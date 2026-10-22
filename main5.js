@@ -78,22 +78,22 @@
     customCSS: "",
     games: [
       {
-        title: "Example Game",
-        description: "Replace this with your first game.",
-        url: "https://example.com/game.html",
-        category: "Arcade",
+        title: "Minecraft 26.3",
+        description: "",
+        url: "https://cdn.jsdelivr.net/gh/classroom-google-co-m/js@main/mc26.html",
+        category: "games",
         mode: "redirect", // redirect | iframe | raw
-        iframeTitle: "Example Game",
+        iframeTitle: "manecraft",
         iframeAllow: "fullscreen; autoplay; gamepad",
         iframeSandbox: "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
         openInNewTab: true
       },
       {
-        title: "Another Game",
-        description: "This example opens the URL inside an iframe.",
-        url: "https://example.org",
-        category: "Featured",
-        mode: "iframe",
+        title: "Baldi's Basics +",
+        description: "",
+        url: "https://cdn.jsdelivr.net/gh/classroom-google-co-m/js/baldi-plus@main/",
+        category: "games",
+        mode: "redirect",
         iframeTitle: "Another Game",
         iframeAllow: "fullscreen; autoplay; gamepad",
         iframeSandbox: "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
