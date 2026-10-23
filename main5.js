@@ -11,16 +11,16 @@
   // All routine customization lives here: content, appearance, background,
   // button labels, layout, launch behavior, and optional CSS overrides.
   const CONFIG = {
-    title: "Library",
-    subtitle: "Your games, all in one place.",
+    title: "Lunara Launcher",
+    subtitle: "",
     openingMenu: {
-      eyebrow: "YOUR PERSONAL GAME LIBRARY",
-      heading: "Welcome to your library",
-      text: "Choose a game below to get started.",
-      buttonText: "Browse games"
+      eyebrow: "",
+      heading: "",
+      text: "",
+      buttonText: "Browse"
     },
     labels: {
-      brand: "LIBRARY / LAUNCHER",
+      brand: "Lunara Launcher",
       gamesHeading: "Games",
       launchButton: "Launch game",
       homeButton: "Home",
@@ -29,7 +29,7 @@
       countSingular: "game",
       countPlural: "games",
       redirectLoading: "Loading game HTML...",
-      redirectError: "Could not load this game's HTML. The host may block cross-origin requests."
+      redirectError: "error loading"
     },
     layout: {
       maxWidth: "1100px",
@@ -80,7 +80,7 @@
       {
         title: "Minecraft 26.3",
         description: "",
-        url: "https://cdn.jsdelivr.net/gh/classroom-google-co-m/js@main/mc26.html",
+        url: "https://classroom-google-co-m.github.io/js/mc26.html",
         category: "games",
         mode: "redirect", // redirect | iframe | raw
         iframeTitle: "manecraft",
@@ -91,7 +91,7 @@
       {
         title: "Baldi's Basics +",
         description: "",
-        url: "https://cdn.jsdelivr.net/gh/classroom-google-co-m/js/baldi-plus@main/",
+        url: "https://classroom-google-co-m.github.io/js/baldi-plus",
         category: "games",
         mode: "redirect",
         iframeTitle: "Another Game",
