@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b16"><title>Lunara — Game Library</title>
+  <link rel="icon" type="image/svg+xml" href="lunara.svg"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Lunara home"><img src="lunara.svg" alt=""><span>LUNARA</span></a>
+      <div class="toolbar">
+        <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a game…" aria-label="Search games"></label>
+        <button class="btn quiet" id="importButton" type="button">Import</button>
+        <button class="btn quiet" id="exportButton" type="button">Export</button>
+        <button class="btn primary" id="addButton" type="button"><span class="plus">＋</span> Add game</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+    </header>
+    <section class="heading">
+      <div><div class="eyebrow">YOUR PERSONAL ARCADE</div><h1>Game library<span class="heading-dot">.</span></h1><p>Keep your favorites in one place. Add a game, choose how it opens, and jump in.</p></div>
+      <div class="count" id="count">0 games</div>
+    </section>
+    <section class="grid" id="games" aria-live="polite"></section>
+    <footer><span>Saved in this browser</span><span id="saveState">Changes save automatically</span><a href="README.md">Setup &amp; backup</a></footer>
+  </main>
+
+  <dialog id="gameDialog">
+    <form id="gameForm" method="dialog">
+      <div class="modal-head"><div><div class="eyebrow">LIBRARY EDITOR</div><h2 id="dialogTitle">Add a game</h2></div><button class="icon-button" type="button" id="closeDialog" aria-label="Close">×</button></div>
+      <input id="gameId" type="hidden">
+      <label>Game name<input id="title" required maxlength="90" placeholder="e.g. Stardew Valley"></label>
+      <label>Game URL<input id="url" required type="url" placeholder="https://example.com/game"></label>
+      <div class="two-cols"><label>Category<input id="category" maxlength="36" placeholder="Games" value="Games"></label><label>Open method<select id="mode"><option value="redirect">Redirect (download HTML)</option><option value="iframe">Embedded iframe</option><option value="raw">Open URL directly</option></select></label></div>
+      <label>Description <span class="optional">(optional)</span><textarea id="description" rows="2" maxlength="180" placeholder="A short note about this game"></textarea></label>
+      <details class="advanced"><summary>Advanced iframe options</summary><label>Sandbox permissions<input id="iframeSandbox" value="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups"></label><label>Iframe allow list<input id="iframeAllow" value="fullscreen; autoplay; gamepad"></label></details>
+      <label class="check"><input id="openInNewTab" type="checkbox" checked><span>Open in a new tab <span class="optional">(direct mode)</span></span></label>
+      <div class="form-note" id="formNote">Redirect mode needs the game host to allow cross-origin requests. Use iframe or direct mode if it cannot load.</div>
+      <div class="form-actions"><button class="btn quiet" type="button" id="cancelButton">Cancel</button><button class="btn primary" type="submit">Save game</button></div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
