@@ -11,13 +11,13 @@
   // All routine customization lives here: content, appearance, background,
   // button labels, layout, launch behavior, and optional CSS overrides.
   const CONFIG = {
-    title: "Lunara Launcher",
-    subtitle: "",
+    title: "Lunara",
+    subtitle: " ",
     openingMenu: {
-      eyebrow: "",
-      heading: "",
+      eyebrow: " ",
+      heading: " ",
       text: "",
-      buttonText: "Browse"
+      buttonText: " "
     },
     labels: {
       brand: "Lunara Launcher",
@@ -28,7 +28,7 @@
       emptyMessage: "No games have been added yet.",
       countSingular: "game",
       countPlural: "games",
-      redirectLoading: "Loading game HTML...",
+      redirectLoading: "downloading... (this may take a bit, if you are sure this isnt loading check console)",
       redirectError: "error loading"
     },
     layout: {
