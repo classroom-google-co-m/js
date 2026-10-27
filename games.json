@@ -13,6 +13,14 @@
       "openInNewTab": true
     },
     {
+  "title": "Click Rush",
+  "description": "Click 10 times before the timer runs out.",
+  "url": "",
+  "category": "Arcade",
+  "mode": "raw-html",
+  "html": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Click Rush</title><style>body{font:20px system-ui;text-align:center;background:#101329;color:white;padding:50px}button{font-size:24px;padding:20px 35px;border:0;border-radius:14px;background:#9c8cff;color:white;cursor:pointer}</style></head><body><h1>Click Rush</h1><p>Score: <span id=\"score\">0</span> · Time: <span id=\"time\">10</span>s</p><button id=\"play\">CLICK!</button><h2 id=\"result\"></h2><script>let score=0,time=10;const scoreEl=document.querySelector('#score'),timeEl=document.querySelector('#time'),button=document.querySelector('#play');const timer=setInterval(()=>{time--;timeEl.textContent=time;if(time<=0){clearInterval(timer);button.disabled=true;document.querySelector('#result').textContent=score>=10?'You win!':'Time up!';}},1000);button.onclick=()=>{if(time>0){score++;scoreEl.textContent=score;}};</script></body></html>"
+    },
+    {
       "title": "Baldi's Basics +",
       "description": "",
       "url": "https://classroom-google-co-m.github.io/js/baldi-plus/",
