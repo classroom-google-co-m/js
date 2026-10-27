@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "games": [
+    {
+      "title": "Minecraft 26.3",
+      "description": "",
+      "url": "https://classroom-google-co-m.github.io/js/mc26.html",
+      "category": "games",
+      "mode": "iframe",
+      "iframeTitle": "manecraft",
+      "iframeAllow": "fullscreen; autoplay; gamepad",
+      "iframeSandbox": "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+      "openInNewTab": true
+    },
+    {
+      "title": "Baldi's Basics +",
+      "description": "",
+      "url": "https://classroom-google-co-m.github.io/js/baldi-plus/",
+      "category": "games",
+      "mode": "redirect",
+      "iframeTitle": "Another Game",
+      "iframeAllow": "fullscreen; autoplay; gamepad",
+      "iframeSandbox": "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+      "openInNewTab": true
+    },
+    {
+      "title": "Getting Over It",
+      "description": "",
+      "url": "https://classroom-google-co-m.github.io/js/getting-over-it/",
+      "category": "games",
+      "mode": "redirect",
+      "iframeTitle": "Another Game",
+      "iframeAllow": "fullscreen; autoplay; gamepad",
+      "iframeSandbox": "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+      "openInNewTab": true
+    },
+    {
+      "title": "Ultrakill",
+      "description": "",
+      "url": "https://classroom-google-co-m.github.io/js/ultrakill",
+      "category": "games",
+      "mode": "redirect",
+      "iframeTitle": "Another Game",
+      "iframeAllow": "fullscreen; autoplay; gamepad",
+      "iframeSandbox": "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+      "openInNewTab": true
+    }
+  ]
+}
