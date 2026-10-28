@@ -590,6 +590,10 @@
     }[ch]));
   }
 
+  function publicText(value) {
+    return String(value ?? "").replace(/playfab/gi, "service");
+  }
+
   const LUNARA_NAME_TOKEN = "<lu- nar>";
   const LUNARA_NAME_LOGO = '<svg class="gd-inline-lunara-mark" viewBox="0 0 32 32" role="img" aria-label="Lunara logo" focusable="false"><path class="gd-inline-mark-moon" d="M21.9 3.6a12.7 12.7 0 1 0 6.5 22.1A13.2 13.2 0 0 1 21.9 3.6Z"/><path class="gd-inline-mark-star" d="m23.8 5.2 1.1 3 3.1 1.1-3.1 1.1-1.1 3.1-1.1-3.1-3-1.1 3-1.1 1.1-3Z"/></svg>';
 
@@ -1116,7 +1120,7 @@ const link = gl => {
         } catch (err) {
           broadcastCanPost = false;
           moderationCanUse = false;
-          broadcastPermissionError = err.message || "Could not check your PlayFab inventory.";
+          broadcastPermissionError = publicText(err.message || "Could not check your inventory.");
           broadcastPermissionCheckedAt = Date.now() - 45000;
           warn("Could not check broadcast item ownership:", err);
         }
@@ -1146,7 +1150,7 @@ const link = gl => {
   }
 
   function startBroadcastPolling(){loadCachedBroadcast();if(broadcastPollTimer)clearInterval(broadcastPollTimer);void refreshBroadcast({notify:false});broadcastPollTimer=window.setInterval(()=>{if(!document.hidden)void refreshBroadcast();},5000);}
-  async function publishBroadcast(btn){const p=btn.closest(".gd-broadcast-panel"),i=p?.querySelector("[data-broadcast-message]"),d=p?.querySelector("[data-broadcast-duration]"),st=p?.querySelector("[data-broadcast-status]"),message=String(i?.value||"").trim(),durationMinutes=Number(d?.value);if(!message){if(st)st.textContent="Enter a message first.";return;}if(!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>10080){if(st)st.textContent="Choose a duration from 1 to 10,080 minutes.";return;}btn.disabled=true;if(st)st.textContent="Publishing…";try{const r=await socialCloudScript("SendLunaraBroadcast",{message,durationMinutes});if(!r?.success)throw Error(r?.message||"Broadcast was not published.");i.value="";applyBroadcast(r.broadcast,{notify:true});if(st)st.textContent="Broadcast is live for everyone.";showTabNotification("Broadcast published");}catch(e){if(st)st.textContent=e.message||"Could not publish broadcast.";}finally{btn.disabled=false;}}
+  async function publishBroadcast(btn){const p=btn.closest(".gd-broadcast-panel"),i=p?.querySelector("[data-broadcast-message]"),d=p?.querySelector("[data-broadcast-duration]"),st=p?.querySelector("[data-broadcast-status]"),message=String(i?.value||"").trim(),durationMinutes=Number(d?.value);if(!message){if(st)st.textContent="Enter a message first.";return;}if(!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>10080){if(st)st.textContent="Choose a duration from 1 to 10,080 minutes.";return;}btn.disabled=true;if(st)st.textContent="Publishing…";try{const r=await socialCloudScript("SendLunaraBroadcast",{message,durationMinutes});if(!r?.success)throw Error(r?.message||"Broadcast was not published.");i.value="";applyBroadcast(r.broadcast,{notify:true});if(st)st.textContent="Broadcast is live for everyone.";showTabNotification("Broadcast published");}catch(e){if(st)st.textContent=publicText(e.message||"Could not publish broadcast.");}finally{btn.disabled=false;}}
 
   function ensureRoot() {
     document.getElementById("library-root")?.remove();
@@ -1218,7 +1222,7 @@ const link = gl => {
     if (currentUser) {
       profile.hidden = false;
       profile.innerHTML = `<span class="gd-user-display">${renderPlayFabName(currentUser.displayName || currentUser.username)}</span><span class="gd-user-name">@${renderPlayFabName(currentUser.username)}</span>`;
-      profile.title = currentUser.playFabId ? `PlayFab ID: ${currentUser.playFabId}` : "Signed in to PlayFab";
+      profile.title = currentUser.playFabId ? `Account ID: ${currentUser.playFabId}` : "Signed in";
     } else {
       profile.hidden = true;
       profile.replaceChildren();
@@ -1289,7 +1293,7 @@ const link = gl => {
   function showStockStatus(message, kind = "") {
     const status = root?.querySelector("[data-stock-status]");
     if (!status) return;
-    status.textContent = message;
+    status.textContent = publicText(message);
     status.className = `gd-stock-status${kind ? ` ${kind}` : ""}`;
   }
 
@@ -1305,7 +1309,7 @@ const link = gl => {
     count.hidden = true;
     content.className = "gd-stock-page";
     stockCardSymbols = "";
-    content.innerHTML = `<div class="gd-stock-hero"><section class="gd-stock-cash-card"><span>Available cash</span><strong data-stock-cash>Loading…</strong><small>PlayFab currency · ${STOCK_CURRENCY_CODE}</small></section></div><div class="gd-stock-summary"><div class="gd-stock-summary-card"><span>Portfolio value</span><strong data-stock-equity>—</strong></div><div class="gd-stock-summary-card"><span>Total account value</span><strong data-stock-total>—</strong></div><div class="gd-stock-summary-card"><span>Next price update</span><strong data-stock-updated>Connecting…</strong></div></div><section class="gd-stock-leaderboard" aria-label="Top five paper traders"><div class="gd-stock-leaderboard-head"><strong>Top 5 Traders</strong><span>Ranked by total account value</span></div><ol class="gd-stock-leaderboard-list" data-stock-leaderboard><li class="gd-stock-leaderboard-empty">Loading leaderboard…</li></ol></section><div class="gd-stock-cards" data-stock-cards><div class="gd-empty">Connecting to the PlayFab market…</div></div><div class="gd-stock-info-panel"><div class="gd-stock-status" data-stock-status role="status">Loading your paper trading account…</div><p class="gd-stock-footnote">Paper trading only. These simulated prices are not real market data. Orders use whole shares and PlayFab's ${STOCK_CURRENCY_CODE} currency.</p></div>`;
+    content.innerHTML = `<div class="gd-stock-hero"><section class="gd-stock-cash-card"><span>Available cash</span><strong data-stock-cash>Loading…</strong><small>Account currency · ${STOCK_CURRENCY_CODE}</small></section></div><div class="gd-stock-summary"><div class="gd-stock-summary-card"><span>Portfolio value</span><strong data-stock-equity>—</strong></div><div class="gd-stock-summary-card"><span>Total account value</span><strong data-stock-total>—</strong></div><div class="gd-stock-summary-card"><span>Next price update</span><strong data-stock-updated>Connecting…</strong></div></div><section class="gd-stock-leaderboard" aria-label="Top five paper traders"><div class="gd-stock-leaderboard-head"><strong>Top 5 Traders</strong><span>Ranked by total account value</span></div><ol class="gd-stock-leaderboard-list" data-stock-leaderboard><li class="gd-stock-leaderboard-empty">Loading leaderboard…</li></ol></section><div class="gd-stock-cards" data-stock-cards><div class="gd-empty">Connecting to the market…</div></div><div class="gd-stock-info-panel"><div class="gd-stock-status" data-stock-status role="status">Loading your paper trading account…</div><p class="gd-stock-footnote">Paper trading only. These simulated prices are not real market data. Orders use whole shares and account currency (${STOCK_CURRENCY_CODE}).</p></div>`;
     window.scrollTo({ top: 0, behavior: "smooth" });
     void refreshStockData();
     stockRefreshTimer = window.setInterval(() => {
@@ -1342,7 +1346,7 @@ const link = gl => {
     const list = root?.querySelector("[data-stock-leaderboard]");
     if (!list) return;
     if (!Array.isArray(entries)) {
-      list.innerHTML = `<li class="gd-stock-leaderboard-empty">Leaderboard unavailable. Publish the updated stock CloudScript.</li>`;
+      list.innerHTML = `<li class="gd-stock-leaderboard-empty">Leaderboard unavailable. Update the stock service handlers.</li>`;
       return;
     }
     if (!entries.length) {
@@ -1422,10 +1426,10 @@ const link = gl => {
       stockMarketData = data;
       renderStockCards(data);
       if (!root.querySelector("[data-stock-status]")?.classList.contains("success")) {
-        showStockStatus("Connected to PlayFab. Prices and cash sync automatically.");
+        showStockStatus("Connected. Prices and cash sync automatically.");
       }
     } catch (err) {
-      if (currentMainPage === "stock") showStockStatus(`Could not load the PlayFab paper market: ${err.message || "CloudScript request failed."} Publish the Lunara stock CloudScript handlers, then retry.`, "error");
+      if (currentMainPage === "stock") showStockStatus(`Could not load the paper market: ${publicText(err.message || "Market request failed.")} Publish the Lunara market handlers, then retry.`, "error");
     } finally {
       stockFetchInFlight = false;
     }
@@ -1546,7 +1550,7 @@ const link = gl => {
       error("Could not download game HTML for redirect mode:", err);
       try {
         tab.document.open();
-        tab.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(game.title || "Game")}</title></head><body style="margin:0;background:#080b16;color:#f7f7ff;font:16px system-ui;padding:24px"><h1>Could not load game HTML</h1><p>${esc(state.labels.redirectError)}</p><p>${esc(String(err && err.message || err))}</p><p>Try iframe mode or raw mode for this URL.</p></body></html>`);
+        tab.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(game.title || "Game")}</title></head><body style="margin:0;background:#080b16;color:#f7f7ff;font:16px system-ui;padding:24px"><h1>Could not load game HTML</h1><p>${esc(state.labels.redirectError)}</p><p>${esc(publicText(String(err && err.message || err)))}</p><p>Try iframe mode or raw mode for this URL.</p></body></html>`);
         tab.document.close();
       } catch (_) {}
     }
@@ -1576,7 +1580,7 @@ const link = gl => {
 
   async function playFabClient(endpoint, body = {}, sessionTicket = "") {
     const titleId = String(CONFIG.playFab.titleId || "").trim();
-    if (!titleId || titleId === "YOUR_PLAYFAB_TITLE_ID") throw new Error("PlayFab Title ID is not configured.");
+    if (!titleId || titleId === "YOUR_PLAYFAB_TITLE_ID") throw new Error("Account sign-in is not configured yet.");
     const headers = { "Content-Type": "application/json" };
     if (sessionTicket) headers["X-Authorization"] = sessionTicket;
     let response;
@@ -1585,11 +1589,11 @@ const link = gl => {
         method: "POST", headers, body: JSON.stringify(body)
       });
     } catch (err) {
-      throw new Error(`Could not reach PlayFab. Check the connection and browser console. ${err.message || ""}`);
+      throw new Error(`Could not reach the account service. Check the connection and browser console. ${err.message || ""}`);
     }
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || payload.error) {
-      const failure = new Error(payload.errorMessage || payload.error || `PlayFab request failed (${response.status}).`);
+      const failure = new Error(payload.errorMessage || payload.error || `Request failed (${response.status}).`);
       failure.playFabCode = payload.errorCode;
       throw failure;
     }
@@ -1601,7 +1605,7 @@ const link = gl => {
   }
 
   function playFabBanSignInMessage() {
-    return "Account Banned. PlayFab has blocked this account from using Lunara. Contact Lunara moderation for the ban details.";
+    return "Account Banned. This account has been blocked from using Lunara. Contact Lunara moderation for the ban details.";
   }
 
   async function bindBrowserId(sessionTicket, browserId) {
@@ -1609,7 +1613,7 @@ const link = gl => {
       await playFabClient("LinkCustomID", { CustomId: browserId }, sessionTicket);
     } catch (err) {
       if (Number(err.playFabCode) === 1184) {
-        throw new Error("This browser is already linked to a different PlayFab account. Use that account on this browser.");
+        throw new Error("This browser is already linked to a different account. Use that account on this browser.");
       }
       throw err;
     }
@@ -1618,9 +1622,9 @@ const link = gl => {
   function applyPlayFabProfile(accountInfo, fallbackUsername, fallbackPlayFabId) {
     const account = accountInfo?.AccountInfo || {};
     if (!account.PlayFabId || (fallbackPlayFabId && account.PlayFabId !== fallbackPlayFabId)) {
-      throw new Error("PlayFab could not verify this account. Please sign in again.");
+      throw new Error("We could not verify this account. Please sign in again.");
     }
-    if (account.TitleInfo?.isBanned) throw new Error("This PlayFab account is currently banned for this title.");
+    if (account.TitleInfo?.isBanned) throw new Error("This account is currently restricted.");
     const title = account.TitleInfo || {};
     currentUser = {
       username: account.Username || fallbackUsername || "Player",
@@ -1641,7 +1645,7 @@ const link = gl => {
       displayName: profile.displayName,
       expiresAt: now + PLAYFAB_SESSION_MS
     };
-    if (!session.ticket) throw new Error("PlayFab did not return a session ticket.");
+    if (!session.ticket) throw new Error("Sign-in did not return a valid session.");
     const encodedSession = JSON.stringify(session);
     try { localStorage.setItem(PLAYFAB_SESSION_KEY, encodedSession); }
     catch { throw new Error("Browser storage is unavailable, so Lunara cannot remember this sign-in for five days."); }
@@ -1690,7 +1694,7 @@ const link = gl => {
     authRoot.id = "library-auth-screen";
     const titleIdReady = Boolean(String(CONFIG.playFab.titleId || "").trim() && CONFIG.playFab.titleId !== "YOUR_PLAYFAB_TITLE_ID");
     const policyMonths = Math.max(1, Number(CONFIG.playFab.inactivityMonths) || 2);
-    authRoot.innerHTML = `<section class="gd-auth-card" role="dialog" aria-modal="true" aria-labelledby="gd-auth-title"><div class="gd-auth-brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M21.9 3.6a12.7 12.7 0 1 0 6.5 22.1A13.2 13.2 0 0 1 21.9 3.6Z"/><path fill="#fff" d="m23.8 5.2 1.1 3 3.1 1.1-3.1 1.1-1.1 3.1-1.1-3.1-3-1.1 3-1.1 1.1-3Z"/></svg><span>${esc(state.title)} account</span></div><h1 id="gd-auth-title">Welcome back</h1><p class="gd-auth-copy">Sign in or create an account to continue to the launcher. Lunara verifies your PlayFab account each time this script runs.</p><div class="gd-auth-tabs"><button class="gd-auth-tab active" type="button" data-auth-mode="login">Sign in</button><button class="gd-auth-tab" type="button" data-auth-mode="register">Create account</button></div><form class="gd-auth-form" data-auth-form="login"><label>Username<input name="username" autocomplete="username" minlength="3" maxlength="20" required></label><label>Password<input name="password" type="password" autocomplete="current-password" minlength="6" maxlength="100" required></label><div class="gd-auth-message" data-auth-message>${esc(message)}</div><button class="gd-btn primary" type="submit" ${titleIdReady ? "" : "disabled"}>Sign in</button></form><form class="gd-auth-form" data-auth-form="register" hidden><label>Username<input name="username" autocomplete="username" minlength="3" maxlength="20" required></label><label>Display name (letters and numbers only)<input name="displayName" autocomplete="nickname" maxlength="25" placeholder="How others will see you"></label><label>Password<input name="password" type="password" autocomplete="new-password" minlength="6" maxlength="100" required></label><label>Confirm password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="6" maxlength="100" required></label><div class="gd-auth-message" data-auth-message>${esc(message)}</div><button class="gd-btn primary" type="submit" ${titleIdReady ? "" : "disabled"}>Create account</button></form><p class="gd-auth-policy">Accounts inactive for more than ${policyMonths} months will be deleted. Sign in regularly to keep your account.</p><p class="gd-auth-note">A persistent browser ID is used to limit one linked account per browser profile. Clearing browser storage or using another profile/device can create a different ID.</p>${titleIdReady ? "" : `<p class="gd-auth-policy">Set <code>CONFIG.playFab.titleId</code> before enabling PlayFab sign-in.</p>`}</section>`;
+    authRoot.innerHTML = `<section class="gd-auth-card" role="dialog" aria-modal="true" aria-labelledby="gd-auth-title"><div class="gd-auth-brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M21.9 3.6a12.7 12.7 0 1 0 6.5 22.1A13.2 13.2 0 0 1 21.9 3.6Z"/><path fill="#fff" d="m23.8 5.2 1.1 3 3.1 1.1-3.1 1.1-1.1 3.1-1.1-3.1-3-1.1 3-1.1 1.1-3Z"/></svg><span>${esc(state.title)} account</span></div><h1 id="gd-auth-title">Welcome back</h1><p class="gd-auth-copy">Sign in or create an account to continue to the launcher. Lunara verifies your account each time this script runs.</p><div class="gd-auth-tabs"><button class="gd-auth-tab active" type="button" data-auth-mode="login">Sign in</button><button class="gd-auth-tab" type="button" data-auth-mode="register">Create account</button></div><form class="gd-auth-form" data-auth-form="login"><label>Username<input name="username" autocomplete="username" minlength="3" maxlength="20" required></label><label>Password<input name="password" type="password" autocomplete="current-password" minlength="6" maxlength="100" required></label><div class="gd-auth-message" data-auth-message>${esc(publicText(message))}</div><button class="gd-btn primary" type="submit" ${titleIdReady ? "" : "disabled"}>Sign in</button></form><form class="gd-auth-form" data-auth-form="register" hidden><label>Username<input name="username" autocomplete="username" minlength="3" maxlength="20" required></label><label>Display name (letters and numbers only)<input name="displayName" autocomplete="nickname" maxlength="25" placeholder="How others will see you"></label><label>Password<input name="password" type="password" autocomplete="new-password" minlength="6" maxlength="100" required></label><label>Confirm password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="6" maxlength="100" required></label><div class="gd-auth-message" data-auth-message>${esc(publicText(message))}</div><button class="gd-btn primary" type="submit" ${titleIdReady ? "" : "disabled"}>Create account</button></form><p class="gd-auth-policy">Accounts inactive for more than ${policyMonths} months will be deleted. Sign in regularly to keep your account.</p><p class="gd-auth-note">A persistent browser ID is used to limit one linked account per browser profile. Clearing browser storage or using another profile/device can create a different ID.</p>${titleIdReady ? "" : `<p class="gd-auth-policy">Account sign-in is not configured yet.</p>`}</section>`;
     document.body.appendChild(authRoot);
     ensureBroadcastBanner();
     authRoot.addEventListener("click", event => { if (event.target.closest("button")) playUiSound("click", true); });
@@ -1712,7 +1716,7 @@ const link = gl => {
   function authMessage(form, message, setup = false) {
     const target = form.querySelector("[data-auth-message]");
     if (!target) return;
-    target.textContent = message;
+    target.textContent = publicText(message);
     target.classList.toggle("setup", setup);
   }
 
@@ -1734,7 +1738,7 @@ const link = gl => {
     }
     if (!browserId) { authMessage(form, "Persistent browser storage is required to sign in."); return; }
     if (confirmPassword !== undefined && confirmPassword !== password) { authMessage(form, "Passwords do not match."); return; }
-    if (!CONFIG.playFab.titleId || CONFIG.playFab.titleId === "YOUR_PLAYFAB_TITLE_ID") { authMessage(form, "PlayFab Title ID is not configured.", true); return; }
+    if (!CONFIG.playFab.titleId || CONFIG.playFab.titleId === "YOUR_PLAYFAB_TITLE_ID") { authMessage(form, "Account sign-in is not configured yet.", true); return; }
     submit.disabled = true;
     const originalText = submit.textContent;
     submit.textContent = mode === "register" ? "Creating account…" : "Signing in…";
@@ -1744,10 +1748,10 @@ const link = gl => {
       if (mode === "register") {
         try {
           await playFabClient("LoginWithCustomID", { TitleId: CONFIG.playFab.titleId, CustomId: browserId, CreateAccount: false });
-          throw new Error("This browser is already linked to a PlayFab account. Choose Sign in instead.");
+          throw new Error("This browser is already linked to an account. Choose Sign in instead.");
         } catch (err) {
-          if (Number(err.playFabCode) !== 1001 && !/already linked to a PlayFab account/.test(err.message)) throw err;
-          if (/already linked to a PlayFab account/.test(err.message)) throw err;
+          if (Number(err.playFabCode) !== 1001 && !/already linked to an account/.test(err.message)) throw err;
+          if (/already linked to an account/.test(err.message)) throw err;
         }
         result = await playFabClient("RegisterPlayFabUser", { TitleId: CONFIG.playFab.titleId, Username: username, DisplayName: displayName || username, Password: password, RequireBothUsernameAndEmail: false });
       } else {
@@ -1765,7 +1769,7 @@ const link = gl => {
   async function beginAuthentication() {
     const browserId = getPersistentBrowserId();
     if (!browserId) { showAuthGate("Enable browser storage to create your persistent browser ID."); return; }
-    if (!String(CONFIG.playFab.titleId || "").trim() || CONFIG.playFab.titleId === "YOUR_PLAYFAB_TITLE_ID") { showAuthGate("PlayFab Title ID is not configured."); return; }
+    if (!String(CONFIG.playFab.titleId || "").trim() || CONFIG.playFab.titleId === "YOUR_PLAYFAB_TITLE_ID") { showAuthGate("Account sign-in is not configured yet."); return; }
     let session = null;
     try { session = JSON.parse(localStorage.getItem(PLAYFAB_SESSION_KEY) || sessionStorage.getItem(PLAYFAB_SESSION_KEY) || "null"); } catch {}
     if (session?.ticket && Number(session.expiresAt) > Date.now()) {
@@ -1774,12 +1778,12 @@ const link = gl => {
         currentUser = applyPlayFabProfile(accountInfo, session.username, session.playFabId);
         if (authExpiryTimer) clearTimeout(authExpiryTimer);
         authExpiryTimer = window.setTimeout(() => showAuthGate("Your five-day session ended. Sign in again to continue."), Math.max(0, session.expiresAt - Date.now()));
-        log(`Restored verified PlayFab sign-in for @${currentUser.username}.`);
+        log(`Restored verified sign-in for @${currentUser.username}.`);
         showLaunchScreen();
         void refreshBroadcast({ notify: false });
         return;
       } catch (err) {
-        warn("Remembered PlayFab session could not be verified; asking for login:", err);
+        warn("Remembered session could not be verified; asking for login:", err);
         if (isPlayFabAccountBanned(err)) {
           try { sessionStorage.removeItem(PLAYFAB_SESSION_KEY); } catch {}
           try { localStorage.removeItem(PLAYFAB_SESSION_KEY); } catch {}
@@ -1790,7 +1794,7 @@ const link = gl => {
     }
     try { sessionStorage.removeItem(PLAYFAB_SESSION_KEY); } catch {}
     try { localStorage.removeItem(PLAYFAB_SESSION_KEY); } catch {}
-    showAuthGate(session?.ticket ? "Your saved PlayFab sign-in expired or the account could not be verified. Sign in again." : "Sign in to verify your PlayFab account before opening Lunara.");
+    showAuthGate(session?.ticket ? "Your saved sign-in expired or the account could not be verified. Sign in again." : "Sign in to verify your account before opening Lunara.");
   }
 
   function formatModerationRemaining(ms){
@@ -1864,7 +1868,7 @@ const link = gl => {
         const continueAfterAck=gate.__moderationOnContinue;
         gate.remove();if(moderationWarningGate===gate)moderationWarningGate=null;
         continueAfterAck?.();
-      }catch(err){button.disabled=false;if(status)status.textContent=err.message||"Acknowledgment failed. Try again.";}
+      }catch(err){button.disabled=false;if(status)status.textContent=publicText(err.message||"Acknowledgment failed. Try again.");}
     });
     gate.addEventListener("keydown",event=>{if(event.key==="Escape"){event.preventDefault();event.stopPropagation();}},true);
   }
@@ -1889,7 +1893,7 @@ const link = gl => {
     const gate=document.createElement("div");
     gate.className="gd-warning-gate";
     gate.innerHTML=`<section class="gd-gate-notice-card" role="alertdialog" aria-modal="true"><h2>Could not verify account status</h2><p>Lunara needs to check moderation status before opening.</p><p class="gd-gate-notice-reason" data-mod-check-error></p><button class="gd-btn primary" type="button" data-mod-check-retry>Retry check</button></section>`;
-    gate.querySelector("[data-mod-check-error]").textContent=errorMessage||"PlayFab CloudScript is unavailable.";
+    gate.querySelector("[data-mod-check-error]").textContent=publicText(errorMessage||"Account status check is unavailable.");
     gate.querySelector("[data-mod-check-retry]").addEventListener("click",()=>{gate.remove();launchStarted=false;button.disabled=false;void handleLaunchClick(screen,button);});
     gate.addEventListener("keydown",event=>{if(event.key==="Escape"){event.preventDefault();event.stopPropagation();}},true);
     document.body.appendChild(gate);
@@ -1920,7 +1924,7 @@ const link = gl => {
       if(!status?.success)throw new Error(status?.message||"Moderation status check did not succeed.");
     }catch(err){
       launchStarted=false;
-      showModerationCheckError(screen,button,err.message||"PlayFab CloudScript is unavailable.");
+      showModerationCheckError(screen,button,err.message||"Account status check is unavailable.");
       return;
     }
     moderationStatus=status;
@@ -1958,7 +1962,7 @@ const link = gl => {
       const namesHtml = visibleOnlineNames.length ? ` · ${visibleOnlineNames.map(renderPlayFabName).join(", ")}${moreOnline}` : "";
       socialLine.innerHTML = `${snapshot.online} online · ${snapshot.unread} missed messages · ${snapshot.requests} friend requests${namesHtml}`;
       if (snapshot.unread || snapshot.requests) showSocialToast(`${snapshot.unread} missed messages · ${snapshot.requests} friend requests${namesText}`);
-    }).catch(err => { if (socialLine.isConnected) socialLine.textContent = `Social status unavailable · ${err.message || "PlayFab request failed"}`; });
+    }).catch(err => { if (socialLine.isConnected) socialLine.textContent = `Social status unavailable · ${publicText(err.message || "Request failed")}`; });
     screen.querySelector("[data-launch-library]").addEventListener("click",event=>{void handleLaunchClick(screen,event.currentTarget);});
     return screen;
   }
@@ -1969,8 +1973,8 @@ const link = gl => {
     if (session?.ticket && Number(session.expiresAt) > Date.now()) return session;
     try { sessionStorage.removeItem(PLAYFAB_SESSION_KEY); } catch {}
     try { localStorage.removeItem(PLAYFAB_SESSION_KEY); } catch {}
-    if (currentUser) showAuthGate("Your PlayFab session is missing or expired. Sign in again to continue.");
-    throw new Error("PlayFab session is missing or expired. Please sign in again.");
+    if (currentUser) showAuthGate("Your session is missing or expired. Sign in again to continue.");
+    throw new Error("Your session is missing or expired. Please sign in again.");
   }
 
   function activeModerationBan(){
@@ -1993,12 +1997,12 @@ const link = gl => {
     if(activeModerationBan()&&["SendFriendRequest","RespondFriendRequest","RemoveFriend","SubmitLunaraFeedback","SendLunaraBroadcast"].includes(functionName))throw new Error(moderationRestrictionMessage());
     const result = await socialCall("ExecuteCloudScript", { FunctionName: functionName, FunctionParameter: args, RevisionSelection: "Live", GeneratePlayStreamEvent: false });
     if (result.Error) {
-      console.error(`[Lunara] CloudScript ${functionName} failed:\n${JSON.stringify({ error: result.Error, logs: result.Logs || [] }, null, 2)}`);
-      throw new Error(result.Error.Message || result.Error.Error || `CloudScript function ${functionName} failed.`);
+      console.error(`[Lunara] Server action ${functionName} failed:\n${JSON.stringify({ error: result.Error, logs: result.Logs || [] }, null, 2)}`);
+      throw new Error(result.Error.Message || result.Error.Error || `Server action ${functionName} failed.`);
     }
     if (result.FunctionResult == null) {
-      console.error(`[Lunara] CloudScript ${functionName} returned no result:`, result);
-      throw new Error(`CloudScript ${functionName} returned no result. Check that this handler exists in the Live revision and returns a value.`);
+      console.error(`[Lunara] Server action ${functionName} returned no result:`, result);
+      throw new Error(`Server action ${functionName} returned no result. Check that the handler is active and returns a value.`);
     }
     return result.FunctionResult;
   }
@@ -2025,14 +2029,14 @@ const link = gl => {
       panel.querySelector("[data-mod-next]").disabled=!result.hasMore;
       renderModerationPlayers(panel,result.players||[]);
       if(status)status.textContent="Player directory · 10 players per page";
-    }catch(err){if(status)status.textContent=err.message||"Could not load players.";}
+    }catch(err){if(status)status.textContent=publicText(err.message||"Could not load players.");}
   }
 
   async function searchModerationPlayer(panel,query){
     const status=panel.querySelector("[data-mod-status]");
     const name=String(query||"").trim();
     if(!name){if(status)status.textContent="Enter a username or display name.";return;}
-    if(status)status.textContent="Searching PlayFab accounts…";
+      if(status)status.textContent="Searching accounts…";
     try{
       const ticket=activeSession().ticket;
       let response,account,errorFound;
@@ -2047,7 +2051,7 @@ const link = gl => {
       panel.querySelector("[data-mod-next]").disabled=true;
       panel.querySelector("[data-mod-page-label]").textContent="Search result";
       if(status)status.textContent="One matching account. Select it to inspect the profile.";
-    }catch(err){panel.querySelector("[data-mod-users]").innerHTML="";if(status)status.textContent=err.message||"No account matched that name.";}
+    }catch(err){panel.querySelector("[data-mod-users]").innerHTML="";if(status)status.textContent=publicText(err.message||"No account matched that name.");}
   }
 
   async function loadModerationDetails(panel,playFabId){
@@ -2061,10 +2065,10 @@ const link = gl => {
       const p=result.player||{};
       const friends=(result.friends||[]).map(friend=>`<div class="gd-mod-friend"><span>${renderPlayFabName(friend.displayName||friend.username||"Player")}</span><span class="gd-mod-muted">@${renderPlayFabName(friend.username||"Player")}</span></div>`).join("")||`<div class="gd-mod-muted">No friends listed.</div>`;
       const warnings=(result.warnings||[]).map(warning=>`<div class="gd-mod-friend"><span>${esc(warning.reason||"Warning")}</span><span class="gd-mod-muted">${warning.acknowledgedAt?"Seen":"Pending"} · ${renderPlayFabName(warning.moderator||"Moderator")}</span></div>`).join("")||`<div class="gd-mod-muted">No warning history.</div>`;
-      const ban=result.ban?`<p class="gd-mod-active-ban">Active PlayFab ban${result.ban.playFabBanId?` · ID ${esc(result.ban.playFabBanId)}`:""} until ${esc(new Date(Number(result.ban.expiresAt)).toLocaleString())}: ${esc(result.ban.reason||"No reason provided.")} · Issued by ${renderPlayFabName(result.ban.moderator||"Moderator")}</p>`:`<p>No active restriction.</p>`;
-      detail.innerHTML=`<h3>${renderPlayFabName(p.displayName||p.username||"Player")}</h3><p>@${renderPlayFabName(p.username||"Player")} · PlayFab ID ${esc(p.playFabId||playFabId)}</p><p>PlayFab Dollars: <strong>$${Number(result.money||0).toLocaleString()}</strong> <span class="gd-mod-muted">(${esc(result.currency||"MM")})</span></p>${ban}<h4>Friends (${(result.friends||[]).length})</h4><div class="gd-mod-friends">${friends}</div><h4>Warnings</h4><div class="gd-mod-friends">${warnings}</div><form class="gd-mod-form" data-mod-form><label>Reason<textarea class="gd-mod-reason" data-mod-reason maxlength="140" minlength="3" required placeholder="Explain the moderation action…"></textarea></label><label>Ban duration in hours<input class="gd-mod-hours" data-mod-hours type="number" min="1" max="8760" step="1" value="24"></label><div class="gd-mod-actions"><button class="gd-btn primary" type="button" data-mod-action="warn">Warn</button><button class="gd-btn gd-mod-ban" type="button" data-mod-action="ban">Ban</button>${result.ban?`<button class="gd-btn gd-mod-unban" type="button" data-mod-action="unban" data-ban-id="${esc(result.ban.playFabBanId||"")}">Unban</button>`:""}</div><div class="gd-mod-status" data-mod-action-status role="status"></div></form>`;
+      const ban=result.ban?`<p class="gd-mod-active-ban">Active ban${result.ban.playFabBanId?` · ID ${esc(result.ban.playFabBanId)}`:""} until ${esc(new Date(Number(result.ban.expiresAt)).toLocaleString())}: ${esc(result.ban.reason||"No reason provided.")} · Issued by ${renderPlayFabName(result.ban.moderator||"Moderator")}</p>`:`<p>No active restriction.</p>`;
+      detail.innerHTML=`<h3>${renderPlayFabName(p.displayName||p.username||"Player")}</h3><p>@${renderPlayFabName(p.username||"Player")} · Account ID ${esc(p.playFabId||playFabId)}</p><p>Account balance: <strong>$${Number(result.money||0).toLocaleString()}</strong> <span class="gd-mod-muted">(${esc(result.currency||"MM")})</span></p>${ban}<h4>Friends (${(result.friends||[]).length})</h4><div class="gd-mod-friends">${friends}</div><h4>Warnings</h4><div class="gd-mod-friends">${warnings}</div><form class="gd-mod-form" data-mod-form><label>Reason<textarea class="gd-mod-reason" data-mod-reason maxlength="140" minlength="3" required placeholder="Explain the moderation action…"></textarea></label><label>Ban duration in hours<input class="gd-mod-hours" data-mod-hours type="number" min="1" max="8760" step="1" value="24"></label><div class="gd-mod-actions"><button class="gd-btn primary" type="button" data-mod-action="warn">Warn</button><button class="gd-btn gd-mod-ban" type="button" data-mod-action="ban">Ban</button>${result.ban?`<button class="gd-btn gd-mod-unban" type="button" data-mod-action="unban" data-ban-id="${esc(result.ban.playFabBanId||"")}">Unban</button>`:""}</div><div class="gd-mod-status" data-mod-action-status role="status"></div></form>`;
       panel.dataset.selectedPlayer=playFabId;
-    }catch(err){detail.innerHTML=`<div class="gd-mod-status">${esc(err.message||"Could not load this player.")}</div>`;}
+    }catch(err){detail.innerHTML=`<div class="gd-mod-status">${esc(publicText(err.message||"Could not load this player."))}</div>`;}
   }
 
   async function applyModerationAction(panel,action){
@@ -2075,31 +2079,31 @@ const link = gl => {
     if(action==="unban"){
       const buttons=[...panel.querySelectorAll("[data-mod-action]")];
       buttons.forEach(button=>button.disabled=true);
-      if(status)status.textContent="Revoking PlayFab ban…";
+      if(status)status.textContent="Revoking ban…";
       try{
         const banId=panel.querySelector('[data-mod-action="unban"]')?.dataset.banId||"";
         const result=await socialCloudScript("UnbanLunaraModerationPlayer",{playFabId,banId});
-        if(!result?.success)throw new Error(result?.message||"Could not revoke this PlayFab ban.");
+        if(!result?.success)throw new Error(result?.message||"Could not revoke this ban.");
         await loadModerationDetails(panel,playFabId);
         const actionStatus=panel.querySelector("[data-mod-action-status]");
-        if(actionStatus)actionStatus.textContent="PlayFab ban revoked and Lunara restriction cleared. Any other active PlayFab bans can still block sign-in.";
-      }catch(err){if(status)status.textContent=err.message||"Could not revoke this PlayFab ban.";}
+        if(actionStatus)actionStatus.textContent="Ban revoked and Lunara restriction cleared. Any other active restrictions can still block sign-in.";
+      }catch(err){if(status)status.textContent=publicText(err.message||"Could not revoke this ban.");}
       finally{panel.querySelectorAll("[data-mod-action]").forEach(button=>button.disabled=false);}
       return;
     }
-    if(reason.length<3||reason.length>140){if(status)status.textContent="Enter a reason between 3 and 140 characters. PlayFab supports up to 140 characters per ban reason.";return;}
+    if(reason.length<3||reason.length>140){if(status)status.textContent="Enter a reason between 3 and 140 characters.";return;}
     const durationHours=Number(panel.querySelector("[data-mod-hours]")?.value);
     if(action==="ban"&&(!Number.isInteger(durationHours)||durationHours<1||durationHours>8760)){if(status)status.textContent="Choose a duration from 1 to 8,760 hours.";return;}
     const buttons=[...panel.querySelectorAll("[data-mod-action]")];
     buttons.forEach(button=>button.disabled=true);
-    if(status)status.textContent=action==="warn"?"Saving warning…":"Applying PlayFab ban…";
+    if(status)status.textContent=action==="warn"?"Saving warning…":"Applying ban…";
     try{
       const result=await socialCloudScript("ApplyLunaraModeration",{playFabId,action,reason,durationHours});
       if(!result?.success)throw new Error(result?.message||"Moderation action failed.");
       await loadModerationDetails(panel,playFabId);
       const actionStatus=panel.querySelector("[data-mod-action-status]");
-      if(actionStatus)actionStatus.textContent=result.message||(action==="warn"?"Warning saved. It will appear on the player's next PlayFab refresh.":`PlayFab ban applied for ${durationHours} hour${durationHours===1?"":"s"}.`);
-    }catch(err){if(status)status.textContent=err.message||"Moderation action failed.";}
+      if(actionStatus)actionStatus.textContent=publicText(result.message||(action==="warn"?"Warning saved. It will appear on the player's next refresh.":`Ban applied for ${durationHours} hour${durationHours===1?"":"s"}.`));
+    }catch(err){if(status)status.textContent=publicText(err.message||"Moderation action failed.");}
     finally{panel.querySelectorAll("[data-mod-action]").forEach(button=>button.disabled=false);}
   }
 
@@ -2108,7 +2112,7 @@ const link = gl => {
     closeModerationPanel();
     const panel=document.createElement("div");
     panel.className="gd-moderation-overlay";
-    panel.innerHTML=`<section class="gd-moderation-card" role="dialog" aria-modal="true" aria-label="Lunara moderation"><div class="gd-mod-head"><div><h2>Player moderation</h2><p class="gd-mod-copy">MD access verified by PlayFab · player data is server-loaded</p></div><button class="gd-btn" type="button" data-mod-close>Close</button></div><div class="gd-mod-toolbar"><form class="gd-mod-search" data-mod-search><input class="gd-mod-input" name="query" maxlength="40" placeholder="Search username or display name"><button class="gd-btn primary" type="submit">Search</button></form><button class="gd-btn" type="button" data-mod-all>All players</button></div><div class="gd-mod-status" data-mod-status role="status">Loading player directory…</div><div class="gd-mod-users" data-mod-users></div><div class="gd-mod-pagination"><button class="gd-btn" type="button" data-mod-prev>Previous</button><span data-mod-page-label>Page 1</span><button class="gd-btn" type="button" data-mod-next>Next</button></div><section class="gd-mod-detail" data-mod-detail hidden></section></section>`;
+    panel.innerHTML=`<section class="gd-moderation-card" role="dialog" aria-modal="true" aria-label="Lunara moderation"><div class="gd-mod-head"><div><h2>Player moderation</h2><p class="gd-mod-copy">MD access verified · player data is securely loaded</p></div><button class="gd-btn" type="button" data-mod-close>Close</button></div><div class="gd-mod-toolbar"><form class="gd-mod-search" data-mod-search><input class="gd-mod-input" name="query" maxlength="40" placeholder="Search username or display name"><button class="gd-btn primary" type="submit">Search</button></form><button class="gd-btn" type="button" data-mod-all>All players</button></div><div class="gd-mod-status" data-mod-status role="status">Loading player directory…</div><div class="gd-mod-users" data-mod-users></div><div class="gd-mod-pagination"><button class="gd-btn" type="button" data-mod-prev>Previous</button><span data-mod-page-label>Page 1</span><button class="gd-btn" type="button" data-mod-next>Next</button></div><section class="gd-mod-detail" data-mod-detail hidden></section></section>`;
     document.body.appendChild(panel);
     moderationPanel=panel;
     panel.addEventListener("click",event=>{
@@ -2167,7 +2171,7 @@ const link = gl => {
         status.className = "gd-feedback-status success";
         form.reset();
       } catch (err) {
-        status.textContent = err.message || "Could not submit this form. Please try again later.";
+        status.textContent = publicText(err.message || "Could not submit this form. Please try again later.");
         status.className = "gd-feedback-status error";
       } finally {
         submit.disabled = false;
@@ -2183,7 +2187,7 @@ const link = gl => {
     friendsRoot = document.createElement("div");
     friendsRoot.className = "gd-social-panel";
     friendsRoot.dataset.view = "friends";
-    friendsRoot.innerHTML = `<section class="gd-social-card" role="dialog" aria-modal="true" aria-label="Friends"><div class="gd-social-head"><h2>Friends</h2><button class="gd-btn" type="button" data-social-close>Close</button></div><div class="gd-social-tools"><input data-friend-username maxlength="20" placeholder="PlayFab username"><button class="gd-btn primary" type="button" data-friend-add>Send request</button></div><div class="gd-social-status" data-social-status></div><div class="gd-social-list" data-friend-list><div class="gd-social-empty">Loading friends…</div></div><div class="gd-chat-view" data-chat-view hidden></div><p class="gd-auth-note">Activity and opaque conversation lookup IDs are public PlayFab data. Message contents are private to the conversation members.</p></section>`;
+    friendsRoot.innerHTML = `<section class="gd-social-card" role="dialog" aria-modal="true" aria-label="Friends"><div class="gd-social-head"><h2>Friends</h2><button class="gd-btn" type="button" data-social-close>Close</button></div><div class="gd-social-tools"><input data-friend-username maxlength="20" placeholder="Username"><button class="gd-btn primary" type="button" data-friend-add>Send request</button></div><div class="gd-social-status" data-social-status></div><div class="gd-social-list" data-friend-list><div class="gd-social-empty">Loading friends…</div></div><div class="gd-chat-view" data-chat-view hidden></div><p class="gd-auth-note">Activity and conversation lookup IDs are visible to the service. Message contents are private to conversation members.</p></section>`;
     document.body.appendChild(friendsRoot);
     friendsRoot.addEventListener("click", event => {
       if (event.target.closest("input,textarea,select,[contenteditable='true']")) {
@@ -2219,7 +2223,7 @@ const link = gl => {
     chatFetchInFlight = false;
   }
 
-  function setSocialStatus(text) { const node = friendsRoot?.querySelector("[data-social-status]"); if (node) node.textContent = text; }
+  function setSocialStatus(text) { const node = friendsRoot?.querySelector("[data-social-status]"); if (node) node.textContent = publicText(text); }
 
   async function loadFriends(prefetched = null) {
     if (!friendsRoot) return;
@@ -2254,27 +2258,27 @@ const link = gl => {
         const user = f.Username || f.Profile?.Username || name;
         return `<article class="gd-friend-row" data-friend-id="${esc(id)}"><span class="gd-online-dot" data-dot></span><div class="gd-friend-info"><div class="gd-friend-name">${renderPlayFabName(name)} <span style="color:#aaa7c2;font-weight:500">@${renderPlayFabName(user)}</span></div><div class="gd-friend-activity" data-activity>Checking activity…</div></div><button class="gd-btn" type="button" data-chat="${esc(id)}">Message</button></article>`;
       }).join("");
-      list.innerHTML = requestRows + friendRows || `<div class="gd-social-empty">No friends or requests yet. Send a request by PlayFab username.${requestResult.requestError ? ` Could not check requests: ${esc(requestResult.requestError)}` : ""}</div>`;
+      list.innerHTML = requestRows + friendRows || `<div class="gd-social-empty">No friends or requests yet. Send a request by username.${requestResult.requestError ? ` Could not check requests: ${esc(publicText(requestResult.requestError))}` : ""}</div>`;
       void loadFriendPresenceList(Friends);
-      setSocialStatus(`${Friends.length} friend${Friends.length === 1 ? "" : "s"} · ${incoming.length} pending request${incoming.length === 1 ? "" : "s"}${requestResult.requestError ? ` · request check failed: ${requestResult.requestError}` : ""}`);
-    } catch (err) { console.error("[Lunara] Could not load the PlayFab friends list:", err); list.innerHTML = `<div class="gd-social-empty">Could not load friends.</div>`; setSocialStatus(err.message); }
+      setSocialStatus(`${Friends.length} friend${Friends.length === 1 ? "" : "s"} · ${incoming.length} pending request${incoming.length === 1 ? "" : "s"}${requestResult.requestError ? ` · request check failed: ${publicText(requestResult.requestError)}` : ""}`);
+    } catch (err) { console.error("[Lunara] Could not load the friends list:", err); list.innerHTML = `<div class="gd-social-empty">Could not load friends.</div>`; setSocialStatus(err.message); }
   }
 
   async function addFriend() {
     const input = friendsRoot?.querySelector("[data-friend-username]");
     const username = input?.value.trim();
-    if (!username) return setSocialStatus("Enter a PlayFab username.");
-    if (!/^[A-Za-z0-9]{3,20}$/.test(username)) return setSocialStatus("PlayFab usernames must use 3–20 letters and numbers only.");
+    if (!username) return setSocialStatus("Enter a username.");
+    if (!/^[A-Za-z0-9]{3,20}$/.test(username)) return setSocialStatus("Usernames must use 3–20 letters and numbers only.");
     try {
       const lookup = await socialCall("GetAccountInfo", { Username: username });
       const account = lookup.AccountInfo || {};
-      if (!account.PlayFabId) throw new Error(`PlayFab could not find username “${username}”.`);
+      if (!account.PlayFabId) throw new Error(`Could not find username “${username}”.`);
       await socialCloudScript("SendFriendRequest", { playFabId: account.PlayFabId });
       input.value = "";
       setSocialStatus(`Friend request sent to ${account.Username || username}.`);
       await loadFriends();
     }
-    catch (err) { console.error("[Lunara] Sending the friend request failed:", err); setSocialStatus(`Could not send friend request: ${err.message || "Unknown PlayFab error."}`); }
+    catch (err) { console.error("[Lunara] Sending the friend request failed:", err); setSocialStatus(`Could not send friend request: ${err.message || "Unknown error."}`); }
   }
 
   async function respondToFriendRequest(action, playFabId) {
@@ -2343,7 +2347,7 @@ const link = gl => {
     if (!id) {
       const created = await socialCall("CreateSharedGroup", {});
       id = created.SharedGroupId;
-      if (!id) throw new Error("PlayFab did not create a conversation.");
+      if (!id) throw new Error("Could not create a conversation.");
       await socialCall("AddSharedGroupMembers", { SharedGroupId: id, PlayFabIds: [friendId] });
       await socialCall("UpdateUserData", { Data: { [dmKey(friendId)]: id }, Permission: "Public" });
     }
@@ -2387,7 +2391,7 @@ const link = gl => {
       }, 4500);
     } catch (err) {
       if (friendsRoot?.dataset.view === "chat") {
-        friendsRoot.querySelector("[data-chat-view]").innerHTML = `<button class="gd-btn gd-social-back" type="button" data-chat-back>← Friends</button><div class="gd-social-empty">Could not open conversation: ${esc(err.message || "PlayFab request failed.")}</div>`;
+        friendsRoot.querySelector("[data-chat-view]").innerHTML = `<button class="gd-btn gd-social-back" type="button" data-chat-back>← Friends</button><div class="gd-social-empty">Could not open conversation: ${esc(publicText(err.message || "Request failed."))}</div>`;
       }
       setSocialStatus(err.message || "Could not open messages.");
     }
@@ -2666,7 +2670,7 @@ const link = gl => {
   async function updatePresence(activity = currentActivity) {
     currentActivity = activity;
     try { await socialCall("UpdateUserData", { Data: { lunaraPresence: JSON.stringify({ activity: currentActivity, updatedAt: Date.now() }) }, Permission: "Public" }); }
-    catch (err) { warn("PlayFab presence update failed:", err); }
+    catch (err) { warn("Presence update failed:", err); }
   }
 
   function mount() {
