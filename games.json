@@ -13,12 +13,34 @@
       "openInNewTab": true
     },
     {
-      "title": "Click Rush",
-      "description": "Click 10 times before the timer runs out.",
+      "title": "Minecraft 1.5.8",
+      "description": "",
+      "url": "https://classroom-google-co-m.github.io/js/mc1.html",
+      "category": "games",
+      "mode": "iframe",
+      "iframeTitle": "manecraft",
+      "iframeAllow": "fullscreen; autoplay; gamepad",
+      "iframeSandbox": "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+      "openInNewTab": true
+    },
+    {
+      "title": "Minecraft 1.12.2",
+      "description": "",
+      "url": "https://classroom-google-co-m.github.io/js/mc12.html",
+      "category": "games",
+      "mode": "iframe",
+      "iframeTitle": "manecraft",
+      "iframeAllow": "fullscreen; autoplay; gamepad",
+      "iframeSandbox": "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups",
+      "openInNewTab": true
+    },
+    {
+      "title": "Super Meat Boy (Flash)",
+      "description": "",
       "url": "",
       "category": "Arcade",
       "mode": "raw-html",
-      "html": "<!doctype html><html><head><meta charset=\"utf-8\"><title>Click Rush</title><style>body{font:20px system-ui;text-align:center;background:#101329;color:white;padding:50px}button{font-size:24px;padding:20px 35px;border:0;border-radius:14px;background:#9c8cff;color:white;cursor:pointer}</style></head><body><h1>Click Rush</h1><p>Score: <span id=\"score\">0</span> · Time: <span id=\"time\">10</span>s</p><button id=\"play\">CLICK!</button><h2 id=\"result\"></h2><script>let score=0,time=10;const scoreEl=document.querySelector('#score'),timeEl=document.querySelector('#time'),button=document.querySelector('#play');const timer=setInterval(()=>{time--;timeEl.textContent=time;if(time<=0){clearInterval(timer);button.disabled=true;document.querySelector('#result').textContent=score>=10?'You win!':'Time up!';}},1000);button.onclick=()=>{if(time>0){score++;scoreEl.textContent=score;}};</script></body></html>"
+      "html": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Meat Boy</title><style>html,body{margin:0;min-height:100%;background:#111}body{display:grid;place-items:center;min-height:100vh}.game{width:min(1000px,100vw)}.game embed{display:block;width:100%;height:auto;aspect-ratio:5/4}</style><script src=\"https://xxsibxx.github.io/ruffleembedsetup112/ruffle/ruffle.js\"></script></head><body><main class=\"game\"><embed src=\"https://gull45.github.io/yesyyes/meatboy.swf\" width=\"1000\" height=\"800\" type=\"application/x-shockwave-flash\" pluginspage=\"http://www.macromedia.com/go/getflashplayer\"></embed></main></body></html>"
     },
     {
       "title": "Baldi's Basics +",
