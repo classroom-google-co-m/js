@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en-us">
 
@@ -5,7 +6,9 @@
     <base href="https://cdn.jsdelivr.net/gh/classroom-google-co-m/js@latest/ultrakill/">
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unity WebGL Player | ULTRAKILL</title>
+
     <style>
         html,
         body {
@@ -14,6 +17,7 @@
             overflow: hidden;
             height: 100%;
             width: 100%;
+            background: black;
         }
 
         #unity-container {
@@ -23,83 +27,196 @@
             top: 0;
             left: 0;
         }
+
+        #unity-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            border: 0;
+            outline: none;
+        }
+
+        html:fullscreen,
+        html:fullscreen body {
+            width: 100%;
+            height: 100%;
+            background: black;
+        }
+
+        #loading-text {
+            color: white;
+            font-family: cursive;
+            font-size: 48px;
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 
-<body style="text-align: center; padding: 0; border: 0; margin: 0;">
-    <div id='loading-text' style="color: black; font-family: cursive; font-size: 48px; text-align: center; margin-top: 20px;">LOADING...</div>
+<body>
+
+    <div id="loading-text">LOADING...</div>
     <canvas id="unity-canvas" tabindex="-1" hidden></canvas>
+
     <script src="Build/ultrakill.loader.js"></script>
+
     <script>
         var canvas = document.querySelector("#unity-canvas");
+
+        // FULLSCREEN
+        async function enterFullscreen() {
+            try {
+                if (!document.fullscreenElement) {
+                    await document.documentElement.requestFullscreen();
+                }
+            } catch (error) {
+                console.log("Fullscreen request denied:", error);
+            }
+        }
+
+        // Enter fullscreen on first user interaction
+        document.addEventListener("click", enterFullscreen, {
+            once: true
+        });
+
+        // Best-effort shortcut handling.
+        // Browsers reserve Ctrl+W, so this cannot guarantee prevention.
+        document.addEventListener("keydown", function(event) {
+            if (
+                event.ctrlKey &&
+                event.key.toLowerCase() === "w"
+            ) {
+                event.preventDefault();
+            }
+        });
+
+        // MOBILE / DESKTOP RESIZING
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            // Mobile device style: fill the whole browser client area with the game canvas:
-            var meta = document.createElement('meta');
-            meta.name = 'viewport';
-            meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-            document.getElementsByTagName('head')[0].appendChild(meta);
+
+            var meta = document.createElement("meta");
+            meta.name = "viewport";
+            meta.content =
+                "width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes";
+
+            document.head.appendChild(meta);
+
             canvas.style.width = "100%";
             canvas.style.height = "100%";
             canvas.style.position = "fixed";
+
             document.body.style.textAlign = "left";
+
         } else {
+
             function resizeCanvas() {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
+
                 canvas.style.width = window.innerWidth + "px";
                 canvas.style.height = window.innerHeight + "px";
             }
+
             resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+
+            window.addEventListener("resize", resizeCanvas);
+
+            document.addEventListener("fullscreenchange", resizeCanvas);
         }
 
+        // MERGE GAME FILES
         function mergeFiles(fileParts) {
             return new Promise((resolve, reject) => {
+
                 let buffers = [];
 
                 function fetchPart(index) {
+
                     if (index >= fileParts.length) {
                         let mergedBlob = new Blob(buffers);
                         let mergedFileUrl = URL.createObjectURL(mergedBlob);
+
                         resolve(mergedFileUrl);
                         return;
                     }
-                    fetch(fileParts[index]).then((response) => response.arrayBuffer()).then((data) => {
-                        buffers.push(data);
-                        fetchPart(index + 1);
-                    }).catch(reject);
+
+                    fetch(fileParts[index])
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("Failed to load: " + fileParts[index]);
+                            }
+                            return response.arrayBuffer();
+                        })
+                        .then(data => {
+                            buffers.push(data);
+                            fetchPart(index + 1);
+                        })
+                        .catch(reject);
                 }
+
                 fetchPart(0);
             });
         }
 
         function getParts(file, start, end) {
             let parts = [];
+
             for (let i = start; i <= end; i++) {
                 parts.push(file + ".part" + i);
             }
+
             return parts;
         }
+
+        // LOAD ULTRAKILL
         Promise.all([
             mergeFiles(getParts("Build/ultrakill.data.unityweb", 1, 4)),
             mergeFiles(getParts("Build/ultrakill.wasm.unityweb", 1, 2))
-        ]).then(([dataUrl, wasmurl]) => {
-            document.querySelector("#unity-canvas").hidden = false;
-            createUnityInstance(document.querySelector("#unity-canvas"), {
-                dataUrl: dataUrl,
-                frameworkUrl: "Build/ultrakill.framework.js.unityweb",
-                codeUrl: wasmurl,
-                streamingAssetsUrl: "StreamingAssets",
-                companyName: "Hakita and Cake Logic",
-                productName: "ULTRAKILL",
-                productVersion: "1.4",
-                // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-                // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
-            }).then((e) => {
-                document.querySelector("#loading-text").remove();
-            });
-        });
-    </script>
-</body>
+        ])
+        .then(([dataUrl, wasmurl]) => {
 
+            canvas.hidden = false;
+
+            createUnityInstance(canvas, {
+
+                dataUrl: dataUrl,
+
+                frameworkUrl: "Build/ultrakill.framework.js.unityweb",
+
+                codeUrl: wasmurl,
+
+                streamingAssetsUrl: "StreamingAssets",
+
+                companyName: "Hakita and Cake Logic",
+
+                productName: "ULTRAKILL",
+
+                productVersion: "1.4"
+
+            }).then((instance) => {
+
+                document.querySelector("#loading-text").remove();
+
+                resizeCanvasIfNeeded();
+
+            }).catch(error => {
+                console.error("Unity initialization failed:", error);
+            });
+
+        })
+        .catch(error => {
+            console.error("Game loading failed:", error);
+            document.querySelector("#loading-text").textContent =
+                "FAILED TO LOAD GAME";
+        });
+
+        function resizeCanvasIfNeeded() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.width = window.innerWidth + "px";
+            canvas.style.height = window.innerHeight + "px";
+        }
+
+    </script>
+
+</body>
 </html>
