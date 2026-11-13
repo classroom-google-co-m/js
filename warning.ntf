@@ -1,0 +1,9 @@
+Heads up: Your cloud file lunara.js is scheduled for deletion
+Hi there,
+We noticed your project file, lunara.js (stored on us-east-cluster-04), has hit our 30-day inactivity limit without any recent saves, commits, or read/write activity. To keep our cloud storage running smoothly, our automated cleanup system flags idle workspaces like this for permanent removal (STATUS: PENDING_PURGE).
+How to keep your work:
+To prevent your code from being wiped, please take a quick second to do one of the following before the cleanup script runs tonight at 11:59 PM UTC:
+• Save a local copy: Download lunara.js directly to your computer.
+• Deploy or push your build: Deploy your current workspace to a live environment or push a commit to your remote repo to reset the inactivity timer.
+Please note that once the scheduled purge runs, the storage block is completely wiped and unlinked—meaning our team won't be able to recover lunara.js for you afterward.
+Let us know if you run into any trouble saving your build!
